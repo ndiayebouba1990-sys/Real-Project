@@ -1,0 +1,91 @@
+# ==========================================================================
+# U-IMCEC — configuration Apache (hébergement mutualisé avec .htaccess)
+# ==========================================================================
+
+Options -Indexes
+ErrorDocument 404 /404.html
+AddDefaultCharset utf-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # --- HTTPS obligatoire (à activer dès que le certificat est en place) ---
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # --- Redirections des anciennes adresses (sites 2016 à 2026) ---
+  # Les pages contact.html, epargne.html et credit.html gardent le même nom qu'avant :
+  # elles ne sont donc pas redirigées (une redirection vers elles-mêmes tournerait en boucle).
+  RewriteRule ^index\.php$ / [R=301,L]
+  RewriteRule ^(exchange|presentation|mission|visions|valeurs|historique|dg|siegeuimcec|unionag)\.html$ /u-imcec.html [R=301,L]
+  RewriteRule ^(presentation|uimcec|motdg|sociaux|financiers|performancesociale)\.php$ /u-imcec.html [R=301,L]
+  RewriteRule ^(services|digit|Monetique)\.html$ /services-numeriques.html [R=301,L]
+  RewriteRule ^(monetique|transfert|transfert_argent)\.php$ /services-numeriques.html [R=301,L]
+  RewriteRule ^(new|article)(\.html|/.*)?$ /actualites.html [R=301,L]
+  RewriteRule ^contact\.php$ /contact.html [R=301,L]
+  RewriteRule ^(Depot_terme|Depot_vue)\.html$ /epargne.html [R=301,L]
+  RewriteRule ^(epargne-a-terme|epargne-a-vue|depot_terme|depot_vue)\.php$ /epargne.html [R=301,L]
+  RewriteRule ^credit[a-z]+\.html$ /credit.html [R=301,L]
+  RewriteRule ^credit[a-z]*\.php$ /credit.html [R=301,L]
+  RewriteRule ^(pret[a-z]*|petitcredit|groupecommunautaire)\.php$ /credit.html [R=301,L]
+  RewriteRule ^(financementcible|financementtouba|financementmboa)\.html$ /credit.html [R=301,L]
+  RewriteRule ^(cfa|mareyeurssl)\.html$ /financement-agricole.html [R=301,L]
+  RewriteRule ^assurance\.html$ /assurances.html [R=301,L]
+  RewriteRule ^(compte|Personne_physique|Personne_morale)\.html$ /ouvrir-un-compte.html [R=301,L]
+  RewriteRule ^(ouvrir_compte_imcec|personne_physique|personne_morale)\.php$ /ouvrir-un-compte.html [R=301,L]
+  RewriteRule ^(reseaufemmes|reseaufemmekaolack|reseaufemmenotto|reseaufemmesl|projetjeune|imceclaureate)\.html$ /femmes-et-jeunes.html [R=301,L]
+  RewriteRule ^(dakar|ImcecDakar)\.html$ /agence-imcec-dakar.html [R=301,L]
+  RewriteRule ^(thies|ImcecThies)\.html$ /agence-imcec-thies.html [R=301,L]
+  RewriteRule ^(mbour|ImcecMbour)\.html$ /agence-imcec-mbour.html [R=301,L]
+  RewriteRule ^casamance\.html$ /agence-imcec-casamance.html [R=301,L]
+  RewriteRule ^imcec_?dakar\.php$ /agence-imcec-dakar.html [R=301,L]
+  RewriteRule ^imcec_?thies\.php$ /agence-imcec-thies.html [R=301,L]
+  RewriteRule ^imcec_?mbour\.php$ /agence-imcec-mbour.html [R=301,L]
+  RewriteRule ^imcec_?casamance\.php$ /agence-imcec-casamance.html [R=301,L]
+  RewriteRule ^Cartographie\.(html|php)$ /agences.html [R=301,L]
+  RewriteRule ^(visiteministre|partenariatministre|tourneetamba|uimceckafountine|randonnee|regatesaintlouis|sensibilisationcancer|planaffairemembre|formation[a-z]*)\.html$ /actualites.html [R=301,L]
+
+  # --- Adresses « en dossiers » d'une version de travail précédente de la refonte ---
+  RewriteRule ^solutions/(epargne|credit|financement-agricole|femmes-et-jeunes|assurances|ouvrir-un-compte)/?$ /$1.html [R=301,L]
+  RewriteRule ^agences/([a-z0-9-]+)/?$ /agence-$1.html [R=301,L]
+  RewriteRule ^actualites/([a-z0-9-]+)/?$ /actualite-$1.html [R=301,L]
+  RewriteRule ^credits/?$ /credits-photos.html [R=301,L]
+  RewriteRule ^(solutions|services-numeriques|u-imcec|agences|actualites|contact|mentions-legales|confidentialite|plan-du-site)/?$ /$1.html [R=301,L]
+</IfModule>
+
+# --- En-têtes de sécurité ---
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=()"
+  # Le site n'utilise que ses propres fichiers : politique de contenu stricte.
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'"
+  # À activer une fois HTTPS généralisé :
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # Cache long pour les fichiers statiques (leur adresse change à chaque publication : ?v=…)
+  <FilesMatch "\.(css|js|woff2|webp|avif|jpg|jpeg|png|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(html|xml|txt|webmanifest)$">
+    Header set Cache-Control "public, max-age=600"
+  </FilesMatch>
+</IfModule>
+
+# --- Compression ---
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json application/xml image/svg+xml application/manifest+json text/plain
+</IfModule>
+
+# --- Types de fichiers ---
+<IfModule mod_mime.c>
+  AddType font/woff2 .woff2
+  AddType image/webp .webp
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+# --- Fichiers à ne jamais servir ---
+<FilesMatch "(^\.|\.(log|ini|bak|sql)$)">
+  Require all denied
+</FilesMatch>
